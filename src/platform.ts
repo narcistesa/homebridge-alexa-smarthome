@@ -146,10 +146,9 @@ export class AlexaSmartHomePlatform implements DynamicPlatformPlugin {
           'Alexa login cookie updated. Storing cookie in file:',
           this.cookiePersistPath,
         )();
-        fs.promises.writeFile(
-          this.cookiePersistPath,
-          JSON.stringify({ cookieData }),
-        ).catch(err => this.log.error('Failed to write cookie file:', err));
+        fs.promises
+          .writeFile(this.cookiePersistPath, JSON.stringify({ cookieData }))
+          .catch((err) => this.log.error('Failed to write cookie file:', err));
       }
     });
 

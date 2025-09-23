@@ -99,20 +99,20 @@ export class AlexaApiWrapper {
             this.log.debug(
               `${d.displayName} ::: Raw device features: ${JSON.stringify(
                 e.features,
-              undefined,
-              2,
-            )}`,
-          )();
+                undefined,
+                2,
+              )}`,
+            )();
           }
           const states = extractStates(e.features);
           if (this.log.isDebugEnabled()) {
             this.log.debug(
               `${d.displayName} ::: Device states: ${JSON.stringify(
                 states,
-              undefined,
-              2,
-            )}`,
-          )();
+                undefined,
+                2,
+              )}`,
+            )();
           }
           this.deviceStore.updateCache([d.id], {
             [d.id]: O.of(states.map(E.right)),
@@ -345,7 +345,10 @@ export class AlexaApiWrapper {
     );
   }
 
-  private doesCacheContainAllIds = (cachedIds: string[], queryIds: string[]) => {
+  private doesCacheContainAllIds = (
+    cachedIds: string[],
+    queryIds: string[],
+  ) => {
     const cachedSet = new Set(cachedIds);
     return queryIds.every((id) => cachedSet.has(id));
   };

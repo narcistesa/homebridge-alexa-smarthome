@@ -89,15 +89,16 @@ export default class DeviceStore {
     const updates: Record<string, Option<CapabilityState>[]> = {};
 
     for (const id of deviceIds) {
-      updates[id] = id in statesByDevice
-        ? pipe(
-            statesByDevice,
-            RR.lookup(id),
-            O.flatten,
-            O.map(A.map(O.getRight)),
-            O.getOrElse(constant(new Array<Option<CapabilityState>>())),
-          )
-        : [];
+      updates[id] =
+        id in statesByDevice
+          ? pipe(
+              statesByDevice,
+              RR.lookup(id),
+              O.flatten,
+              O.map(A.map(O.getRight)),
+              O.getOrElse(constant(new Array<Option<CapabilityState>>())),
+            )
+          : [];
     }
 
     Object.assign(this.cache.states, updates);
