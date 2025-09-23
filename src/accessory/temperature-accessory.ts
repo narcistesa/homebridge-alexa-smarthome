@@ -45,8 +45,28 @@ export default class TemperatureAccessory extends BaseAccessory {
     return pipe(
       this.getStateGraphQl(determineCurrentTemp),
       TE.match((e) => {
-        this.logWithContext('errorT', 'Get current temperature', e);
-        throw this.serviceCommunicationError;
+        this.logWithContext(
+          'warn',
+          `Temperature data unavailable for ${this.device.displayName}, using fallback value. Error: ${e.message}`,
+        );
+
+        const cachedValue = this.getCacheValue('temperatureSensor');
+        if (O.isSome(cachedValue)) {
+          const mappedTemp = tempMapper.mapAlexaTempToHomeKit(cachedValue.value);
+          if (O.isSome(mappedTemp)) {
+            this.logWithContext(
+              'debug',
+              `Using cached temperature value: ${mappedTemp.value} Celsius`,
+            );
+            return mappedTemp.value;
+          }
+        }
+
+        this.logWithContext(
+          'debug',
+          'No cached temperature value available, returning 0 Celsius',
+        );
+        return 0;
       }, identity),
     )();
   }
