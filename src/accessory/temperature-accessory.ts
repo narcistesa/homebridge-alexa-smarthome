@@ -64,11 +64,8 @@ export default class TemperatureAccessory extends BaseAccessory {
           }
         }
 
-        this.logWithContext(
-          'debug',
-          'No cached temperature value available, returning 0 Celsius',
-        );
-        return 0;
+        this.logWithContext('errorT', 'Get current temperature', e);
+        throw this.serviceCommunicationError;
       }, identity),
     )();
   }
