@@ -34,14 +34,12 @@ import { PluginLogger } from './util/plugin-logger';
 import { AlexaApiWrapper } from './wrapper/alexa-api-wrapper';
 
 export class AlexaSmartHomePlatform implements DynamicPlatformPlugin {
-  public readonly HAP: API['hap'] = this.api.hap;
-
-  public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic =
-    this.api.hap.Characteristic;
+  public readonly HAP: API['hap'];
+  public readonly Service: typeof Service;
+  public readonly Characteristic: typeof Characteristic;
 
   public readonly log: PluginLogger;
-  public readonly config: AlexaPlatformConfig;
+  public readonly config!: AlexaPlatformConfig;
   public readonly alexaRemote: AlexaRemote;
   public readonly alexaApi: AlexaApiWrapper;
   public readonly deviceStore: DeviceStore;
@@ -57,6 +55,10 @@ export class AlexaSmartHomePlatform implements DynamicPlatformPlugin {
     config: PlatformConfig,
     public readonly api: API,
   ) {
+    this.HAP = this.api.hap;
+    this.Service = this.api.hap.Service;
+    this.Characteristic = this.api.hap.Characteristic;
+
     this.log = new PluginLogger(logger, config);
 
     if (util.validateConfig(config)) {
@@ -144,10 +146,10 @@ export class AlexaSmartHomePlatform implements DynamicPlatformPlugin {
           'Alexa login cookie updated. Storing cookie in file:',
           this.cookiePersistPath,
         )();
-        fs.writeFileSync(
+        fs.promises.writeFile(
           this.cookiePersistPath,
           JSON.stringify({ cookieData }),
-        );
+        ).catch(err => this.log.error('Failed to write cookie file:', err));
       }
     });
 
@@ -200,7 +202,11 @@ export class AlexaSmartHomePlatform implements DynamicPlatformPlugin {
                 () => callback(O.none),
                 (e) => {
                   if (firstAttempt && e.message.includes('401 Unauthorized')) {
-                    fs.rmSync(this.cookiePersistPath);
+                    try {
+                      fs.rmSync(this.cookiePersistPath, { force: true });
+                    } catch (err) {
+                      this.log.debug('Failed to remove cookie file', err)();
+                    }
                     this.initAlexaRemote(callback, false);
                   } else {
                     callback(O.of(e));

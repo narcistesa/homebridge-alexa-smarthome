@@ -86,24 +86,26 @@ export default class DeviceStore {
     deviceIds: string[],
     statesByDevice: CapabilityStatesByDevice,
   ): ValidStatesByDevice {
-    pipe(
-      deviceIds,
-      A.map((id) => {
-        this.cache.states[id] =
-          id in statesByDevice
-            ? pipe(
-                statesByDevice,
-                RR.lookup(id),
-                O.flatten,
-                O.map(A.map(O.getRight)),
-                O.getOrElse(constant(new Array<Option<CapabilityState>>())),
-              )
-            : [];
-      }),
-      RA.match(constVoid, () => {
-        this.cache.lastUpdated = new Date();
-      }),
-    );
+    const updates: Record<string, Option<CapabilityState>[]> = {};
+
+    for (const id of deviceIds) {
+      updates[id] = id in statesByDevice
+        ? pipe(
+            statesByDevice,
+            RR.lookup(id),
+            O.flatten,
+            O.map(A.map(O.getRight)),
+            O.getOrElse(constant(new Array<Option<CapabilityState>>())),
+          )
+        : [];
+    }
+
+    Object.assign(this.cache.states, updates);
+
+    if (deviceIds.length > 0) {
+      this.cache.lastUpdated = new Date();
+    }
+
     return this.cache.states;
   }
 

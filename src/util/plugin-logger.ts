@@ -24,6 +24,10 @@ export class PluginLogger {
     };
   }
 
+  isDebugEnabled(): boolean {
+    return !!this.config.debug;
+  }
+
   info(message: string, ...parameters: any[]): IO<void> {
     return () => this.logger.info(message, ...parameters);
   }

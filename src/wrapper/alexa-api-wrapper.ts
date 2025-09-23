@@ -63,8 +63,8 @@ export class AlexaApiWrapper {
     private readonly deviceStore: DeviceStore,
   ) {
     this.semaphore = withTimeout(
-      new Semaphore(2, new TimeoutError('Alexa API Timeout')),
-      65_000,
+      new Semaphore(5, new TimeoutError('Alexa API Timeout')),
+      30_000,
     );
   }
 
@@ -95,21 +95,25 @@ export class AlexaApiWrapper {
       TE.tapIO((devices) => {
         this.deviceStore.deviceCapabilities = extractRangeFeatures(devices);
         devices.forEach(([e, d]) => {
-          this.log.debug(
-            `${d.displayName} ::: Raw device features: ${JSON.stringify(
-              e.features,
+          if (this.log.isDebugEnabled()) {
+            this.log.debug(
+              `${d.displayName} ::: Raw device features: ${JSON.stringify(
+                e.features,
               undefined,
               2,
             )}`,
           )();
+          }
           const states = extractStates(e.features);
-          this.log.debug(
-            `${d.displayName} ::: Device states: ${JSON.stringify(
-              states,
+          if (this.log.isDebugEnabled()) {
+            this.log.debug(
+              `${d.displayName} ::: Device states: ${JSON.stringify(
+                states,
               undefined,
               2,
             )}`,
-          );
+          )();
+          }
           this.deviceStore.updateCache([d.id], {
             [d.id]: O.of(states.map(E.right)),
           });
@@ -341,8 +345,8 @@ export class AlexaApiWrapper {
     );
   }
 
-  private doesCacheContainAllIds = (cachedIds: string[], queryIds: string[]) =>
-    queryIds.every((id) => {
-      return cachedIds.includes(id);
-    });
+  private doesCacheContainAllIds = (cachedIds: string[], queryIds: string[]) => {
+    const cachedSet = new Set(cachedIds);
+    return queryIds.every((id) => cachedSet.has(id));
+  };
 }
