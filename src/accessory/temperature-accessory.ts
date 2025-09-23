@@ -52,7 +52,9 @@ export default class TemperatureAccessory extends BaseAccessory {
 
         const cachedValue = this.getCacheValue('temperatureSensor');
         if (O.isSome(cachedValue)) {
-          const mappedTemp = tempMapper.mapAlexaTempToHomeKit(cachedValue.value);
+          const mappedTemp = tempMapper.mapAlexaTempToHomeKit(
+            cachedValue.value,
+          );
           if (O.isSome(mappedTemp)) {
             this.logWithContext(
               'debug',
