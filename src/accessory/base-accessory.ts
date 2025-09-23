@@ -15,10 +15,8 @@ import { AlexaSmartHomePlatform } from '../platform';
 import { PluginLogLevel, PluginLogger } from '../util/plugin-logger';
 
 export default abstract class BaseAccessory {
-  public readonly Service: typeof Service = this.platform.Service;
-
-  public readonly Characteristic: typeof Characteristic =
-    this.platform.Characteristic;
+  public readonly Service: typeof Service;
+  public readonly Characteristic: typeof Characteristic;
 
   readonly log: PluginLogger;
 
@@ -32,6 +30,8 @@ export default abstract class BaseAccessory {
     public readonly device: SmartHomeDevice,
     public readonly platformAcc: PlatformAccessory,
   ) {
+    this.Service = this.platform.Service;
+    this.Characteristic = this.platform.Characteristic;
     this.log = platform.log;
     this.addAccessoryInfoService();
     this.rangeFeatures = this.platform.deviceStore.getRangeFeaturesForDevice(
