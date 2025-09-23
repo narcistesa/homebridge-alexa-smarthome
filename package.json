@@ -18,7 +18,7 @@
     "url": "https://github.com/sponsors/narcistesa"
   },
   "engines": {
-    "homebridge": "^2.0.0",
+    "homebridge": "^1.6.0 || ^2.0.0",
     "node": "^22.0.0"
   },
   "main": "dist/index.js",
