@@ -12,6 +12,8 @@ export default class TemperatureAccessory extends BaseAccessory {
   static requiredOperations: SupportedActionsType[] = [];
   service: Service;
   isExternalAccessory = false;
+  private lastErrorTime: { [key: string]: number } = {};
+  private readonly ERROR_COOLDOWN = 30000; // 30 seconds
 
   configureServices() {
     this.service =
@@ -27,6 +29,26 @@ export default class TemperatureAccessory extends BaseAccessory {
   }
 
   async handleCurrentTempGet(): Promise<number> {
+    const cachedValue = this.getCacheValue('temperatureSensor');
+    if (O.isSome(cachedValue)) {
+      const mappedTemp = tempMapper.mapAlexaTempToHomeKit(cachedValue.value);
+      if (O.isSome(mappedTemp)) {
+        this.logWithContext(
+          'debug',
+          `Using cached temperature value: ${mappedTemp.value} Celsius`,
+        );
+        return mappedTemp.value;
+      }
+    }
+
+    if (this.shouldSkipApiCall('Temperature')) {
+      this.logWithContext(
+        'debug',
+        'Skipping temperature API call due to recent error',
+      );
+      throw this.serviceCommunicationError;
+    }
+
     const determineCurrentTemp = flow(
       A.findFirst<TempSensorState>(
         ({ featureName }) => featureName === 'temperatureSensor',
@@ -45,20 +67,21 @@ export default class TemperatureAccessory extends BaseAccessory {
     return pipe(
       this.getStateGraphQl(determineCurrentTemp),
       TE.match((e) => {
+        this.recordError('Temperature');
         this.logWithContext(
           'warn',
           `Temperature data unavailable for ${this.device.displayName}, using fallback value. Error: ${e.message}`,
         );
 
-        const cachedValue = this.getCacheValue('temperatureSensor');
-        if (O.isSome(cachedValue)) {
+        const fallbackValue = this.getCacheValue('temperatureSensor');
+        if (O.isSome(fallbackValue)) {
           const mappedTemp = tempMapper.mapAlexaTempToHomeKit(
-            cachedValue.value,
+            fallbackValue.value,
           );
           if (O.isSome(mappedTemp)) {
             this.logWithContext(
               'debug',
-              `Using cached temperature value: ${mappedTemp.value} Celsius`,
+              `Using fallback cached temperature value: ${mappedTemp.value} Celsius`,
             );
             return mappedTemp.value;
           }
@@ -68,5 +91,14 @@ export default class TemperatureAccessory extends BaseAccessory {
         throw this.serviceCommunicationError;
       }, identity),
     )();
+  }
+
+  private shouldSkipApiCall(rangeName: string): boolean {
+    const lastError = this.lastErrorTime[rangeName];
+    return Boolean(lastError && (Date.now() - lastError) < this.ERROR_COOLDOWN);
+  }
+
+  private recordError(rangeName: string): void {
+    this.lastErrorTime[rangeName] = Date.now();
   }
 }

@@ -18,6 +18,8 @@ export default class AirQualityAccessory extends BaseAccessory {
   static requiredOperations: SupportedActionsType[] = [];
   service: Service;
   isExternalAccessory = false;
+  private lastErrorTime: { [key: string]: number } = {};
+  private readonly ERROR_COOLDOWN = 30000; // 30 seconds
 
   configureServices() {
     this.service =
@@ -66,6 +68,26 @@ export default class AirQualityAccessory extends BaseAccessory {
   }
 
   async handleAirQualityGet(asset: RangeFeature): Promise<number> {
+    const cachedValue = this.getCacheValue('range', undefined, asset.instance);
+    if (O.isSome(cachedValue)) {
+      this.logWithContext(
+        'debug',
+        `Using cached air quality value: ${cachedValue.value}`,
+      );
+      return mapper.mapAlexaAirQualityToHomeKit(
+        cachedValue.value,
+        this.Characteristic.AirQuality,
+      );
+    }
+
+    if (this.shouldSkipApiCall('AirQuality')) {
+      this.logWithContext(
+        'debug',
+        'Skipping air quality API call due to recent error, returning UNKNOWN',
+      );
+      return this.Characteristic.AirQuality.UNKNOWN;
+    }
+
     const determineAirQuality = flow(
       A.findFirst<AirQualityMonitorState>(
         ({ featureName, instance }) =>
@@ -85,23 +107,24 @@ export default class AirQualityAccessory extends BaseAccessory {
     return pipe(
       this.getStateGraphQl(determineAirQuality),
       TE.match((e) => {
+        this.recordError('AirQuality');
         this.logWithContext(
           'warn',
           `Air quality data unavailable for ${this.device.displayName}, using fallback value. Error: ${e.message}`,
         );
 
-        const cachedValue = this.getCacheValue(
+        const fallbackValue = this.getCacheValue(
           'range',
           undefined,
           asset.instance,
         );
-        if (O.isSome(cachedValue)) {
+        if (O.isSome(fallbackValue)) {
           this.logWithContext(
             'debug',
-            `Using cached air quality value: ${cachedValue.value}`,
+            `Using fallback cached air quality value: ${fallbackValue.value}`,
           );
           return mapper.mapAlexaAirQualityToHomeKit(
-            cachedValue.value,
+            fallbackValue.value,
             this.Characteristic.AirQuality,
           );
         }
@@ -126,9 +149,18 @@ export default class AirQualityAccessory extends BaseAccessory {
       return cachedValue.value;
     }
 
+    if (this.shouldSkipApiCall('PM2.5')) {
+      this.logWithContext(
+        'debug',
+        'Skipping PM2.5 API call due to recent error, returning 0',
+      );
+      return 0;
+    }
+
     return pipe(
       this.getStateGraphQl(this.determineDensity(asset)),
       TE.match((e) => {
+        this.recordError('PM2.5');
         this.logWithContext(
           'warn',
           `PM2.5 density data unavailable for ${this.device.displayName}, using fallback value. Error: ${e.message}`,
@@ -170,9 +202,18 @@ export default class AirQualityAccessory extends BaseAccessory {
       return cachedValue.value;
     }
 
+    if (this.shouldSkipApiCall('VOC')) {
+      this.logWithContext(
+        'debug',
+        'Skipping VOC API call due to recent error, returning 0',
+      );
+      return 0;
+    }
+
     return pipe(
       this.getStateGraphQl(this.determineDensity(asset)),
       TE.match((e) => {
+        this.recordError('VOC');
         this.logWithContext(
           'warn',
           `VOC density data unavailable for ${this.device.displayName}, using fallback value. Error: ${e.message}`,
@@ -201,6 +242,15 @@ export default class AirQualityAccessory extends BaseAccessory {
         return 0;
       }, identity),
     )();
+  }
+
+  private shouldSkipApiCall(rangeName: string): boolean {
+    const lastError = this.lastErrorTime[rangeName];
+    return Boolean(lastError && (Date.now() - lastError) < this.ERROR_COOLDOWN);
+  }
+
+  private recordError(rangeName: string): void {
+    this.lastErrorTime[rangeName] = Date.now();
   }
 
   private determineDensity(asset: RangeFeature) {

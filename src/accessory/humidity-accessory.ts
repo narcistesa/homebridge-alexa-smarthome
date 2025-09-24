@@ -15,6 +15,8 @@ export default class HumidityAccessory extends BaseAccessory {
   static requiredOperations: SupportedActionsType[] = [];
   service: Service;
   isExternalAccessory = false;
+  private lastErrorTime: { [key: string]: number } = {};
+  private readonly ERROR_COOLDOWN = 30000; // 30 seconds
 
   configureServices() {
     this.service =
@@ -43,13 +45,50 @@ export default class HumidityAccessory extends BaseAccessory {
   }
 
   async handleHumidityGet(asset: RangeFeature): Promise<number> {
+    const cachedValue = this.getCacheValue('range', undefined, asset.instance);
+    if (O.isSome(cachedValue) && typeof cachedValue.value === 'number') {
+      this.logWithContext(
+        'debug',
+        `Using cached humidity value: ${cachedValue.value}`,
+      );
+      return cachedValue.value;
+    }
+
+    if (this.shouldSkipApiCall('Humidity')) {
+      this.logWithContext(
+        'debug',
+        'Skipping humidity API call due to recent error',
+      );
+      throw this.serviceCommunicationError;
+    }
+
     return pipe(
       this.getStateGraphQl(this.determineLevel(asset)),
       TE.match((e) => {
+        this.recordError('Humidity');
+
+        const fallbackValue = this.getCacheValue('range', undefined, asset.instance);
+        if (O.isSome(fallbackValue) && typeof fallbackValue.value === 'number') {
+          this.logWithContext(
+            'warn',
+            `Humidity data unavailable for ${this.device.displayName}, using fallback cached value: ${fallbackValue.value}. Error: ${e.message}`,
+          );
+          return fallbackValue.value;
+        }
+
         this.logWithContext('errorT', 'Get humidity', e);
         throw this.serviceCommunicationError;
       }, identity),
     )();
+  }
+
+  private shouldSkipApiCall(rangeName: string): boolean {
+    const lastError = this.lastErrorTime[rangeName];
+    return Boolean(lastError && (Date.now() - lastError) < this.ERROR_COOLDOWN);
+  }
+
+  private recordError(rangeName: string): void {
+    this.lastErrorTime[rangeName] = Date.now();
   }
 
   private determineLevel(asset: RangeFeature) {
