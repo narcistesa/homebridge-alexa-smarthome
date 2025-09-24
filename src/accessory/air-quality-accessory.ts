@@ -116,11 +116,7 @@ export default class AirQualityAccessory extends BaseAccessory {
   }
 
   async handlePM25DensityGet(asset: RangeFeature): Promise<number> {
-    const cachedValue = this.getCacheValue(
-      'range',
-      undefined,
-      asset.instance,
-    );
+    const cachedValue = this.getCacheValue('range', undefined, asset.instance);
 
     if (O.isSome(cachedValue) && typeof cachedValue.value === 'number') {
       this.logWithContext(
@@ -143,7 +139,10 @@ export default class AirQualityAccessory extends BaseAccessory {
           undefined,
           asset.instance,
         );
-        if (O.isSome(fallbackValue) && typeof fallbackValue.value === 'number') {
+        if (
+          O.isSome(fallbackValue) &&
+          typeof fallbackValue.value === 'number'
+        ) {
           this.logWithContext(
             'debug',
             `Using fallback cached PM2.5 density value: ${fallbackValue.value}`,
@@ -161,11 +160,7 @@ export default class AirQualityAccessory extends BaseAccessory {
   }
 
   async handleVocDensityGet(asset: RangeFeature): Promise<number> {
-    const cachedValue = this.getCacheValue(
-      'range',
-      undefined,
-      asset.instance,
-    );
+    const cachedValue = this.getCacheValue('range', undefined, asset.instance);
 
     if (O.isSome(cachedValue) && typeof cachedValue.value === 'number') {
       this.logWithContext(
@@ -188,7 +183,10 @@ export default class AirQualityAccessory extends BaseAccessory {
           undefined,
           asset.instance,
         );
-        if (O.isSome(fallbackValue) && typeof fallbackValue.value === 'number') {
+        if (
+          O.isSome(fallbackValue) &&
+          typeof fallbackValue.value === 'number'
+        ) {
           this.logWithContext(
             'debug',
             `Using fallback cached VOC density value: ${fallbackValue.value}`,
