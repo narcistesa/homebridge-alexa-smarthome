@@ -57,37 +57,43 @@ export const toSupportedHomeKitAccessories = (
           }),
         )
         .with({ featureName: 'temperatureSensor' }, () =>
-          O.of({
-            altDeviceName: O.of(`${deviceName} temperature`),
-            deviceType: platform.Service.TemperatureSensor.UUID,
-            uuid: generateUuid(
-              platform,
-              entityId,
-              platform.Service.TemperatureSensor.UUID,
-            ),
-          }),
+          platform.config.airQualityOptions?.disableTemperatureSensor
+            ? O.none
+            : O.of({
+                altDeviceName: O.of(`${deviceName} temperature`),
+                deviceType: platform.Service.TemperatureSensor.UUID,
+                uuid: generateUuid(
+                  platform,
+                  entityId,
+                  platform.Service.TemperatureSensor.UUID,
+                ),
+              }),
         )
         .when(isHumiditySensor.bind(undefined, rangeFeatures), () =>
-          O.of({
-            altDeviceName: O.of(`${deviceName} humidity`),
-            deviceType: platform.Service.HumiditySensor.UUID,
-            uuid: generateUuid(
-              platform,
-              entityId,
-              platform.Service.HumiditySensor.UUID,
-            ),
-          }),
+          platform.config.airQualityOptions?.disableHumiditySensor
+            ? O.none
+            : O.of({
+                altDeviceName: O.of(`${deviceName} humidity`),
+                deviceType: platform.Service.HumiditySensor.UUID,
+                uuid: generateUuid(
+                  platform,
+                  entityId,
+                  platform.Service.HumiditySensor.UUID,
+                ),
+              }),
         )
         .when(isCarbonMonoxideSensor.bind(undefined, rangeFeatures), () =>
-          O.of({
-            altDeviceName: O.of(`${deviceName} carbon monoxide`),
-            deviceType: platform.Service.CarbonMonoxideSensor.UUID,
-            uuid: generateUuid(
-              platform,
-              entityId,
-              platform.Service.CarbonMonoxideSensor.UUID,
-            ),
-          }),
+          platform.config.airQualityOptions?.disableCarbonMonoxideSensor
+            ? O.none
+            : O.of({
+                altDeviceName: O.of(`${deviceName} carbon monoxide`),
+                deviceType: platform.Service.CarbonMonoxideSensor.UUID,
+                uuid: generateUuid(
+                  platform,
+                  entityId,
+                  platform.Service.CarbonMonoxideSensor.UUID,
+                ),
+              }),
         )
         .otherwise(constant(O.none)),
     ),

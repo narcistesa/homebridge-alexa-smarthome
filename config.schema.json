@@ -112,6 +112,35 @@
           }
         }
       },
+      "airQualityOptions": {
+        "title": "Air Quality Sensor Options",
+        "description": "Configure which additional sensors are reported for air quality monitors.",
+        "type": "object",
+        "required": false,
+        "properties": {
+          "disableTemperatureSensor": {
+            "title": "Disable temperature sensor",
+            "description": "Disable temperature reporting for air quality monitors.",
+            "type": "boolean",
+            "required": false,
+            "default": false
+          },
+          "disableHumiditySensor": {
+            "title": "Disable humidity sensor",
+            "description": "Disable humidity reporting for air quality monitors.",
+            "type": "boolean",
+            "required": false,
+            "default": false
+          },
+          "disableCarbonMonoxideSensor": {
+            "title": "Disable carbon monoxide sensor",
+            "description": "Disable carbon monoxide reporting for air quality monitors.",
+            "type": "boolean",
+            "required": false,
+            "default": false
+          }
+        }
+      },
       "debug": {
         "title": "Debug logging",
         "description": "Whether to enable debug logging for troubleshooting issues and support.",

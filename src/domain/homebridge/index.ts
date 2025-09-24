@@ -25,5 +25,10 @@ export interface AlexaPlatformConfig extends PlatformConfig {
   performance: Nullable<{
     cacheTTL: Nullable<number>;
   }>;
+  airQualityOptions: Nullable<{
+    disableTemperatureSensor: Nullable<boolean>;
+    disableHumiditySensor: Nullable<boolean>;
+    disableCarbonMonoxideSensor: Nullable<boolean>;
+  }>;
   debug: Nullable<boolean>;
 }
