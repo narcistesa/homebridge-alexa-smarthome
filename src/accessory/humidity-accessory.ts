@@ -67,8 +67,15 @@ export default class HumidityAccessory extends BaseAccessory {
       TE.match((e) => {
         this.recordError('Humidity');
 
-        const fallbackValue = this.getCacheValue('range', undefined, asset.instance);
-        if (O.isSome(fallbackValue) && typeof fallbackValue.value === 'number') {
+        const fallbackValue = this.getCacheValue(
+          'range',
+          undefined,
+          asset.instance,
+        );
+        if (
+          O.isSome(fallbackValue) &&
+          typeof fallbackValue.value === 'number'
+        ) {
           this.logWithContext(
             'warn',
             `Humidity data unavailable for ${this.device.displayName}, using fallback cached value: ${fallbackValue.value}. Error: ${e.message}`,
@@ -84,7 +91,7 @@ export default class HumidityAccessory extends BaseAccessory {
 
   private shouldSkipApiCall(rangeName: string): boolean {
     const lastError = this.lastErrorTime[rangeName];
-    return Boolean(lastError && (Date.now() - lastError) < this.ERROR_COOLDOWN);
+    return Boolean(lastError && Date.now() - lastError < this.ERROR_COOLDOWN);
   }
 
   private recordError(rangeName: string): void {

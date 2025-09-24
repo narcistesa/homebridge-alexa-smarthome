@@ -95,7 +95,7 @@ export default class TemperatureAccessory extends BaseAccessory {
 
   private shouldSkipApiCall(rangeName: string): boolean {
     const lastError = this.lastErrorTime[rangeName];
-    return Boolean(lastError && (Date.now() - lastError) < this.ERROR_COOLDOWN);
+    return Boolean(lastError && Date.now() - lastError < this.ERROR_COOLDOWN);
   }
 
   private recordError(rangeName: string): void {

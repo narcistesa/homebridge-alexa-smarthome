@@ -96,7 +96,11 @@ export default class CarbonMonoxideAccessory extends BaseAccessory {
       TE.match((e) => {
         this.recordError('CarbonMonoxideDetected');
 
-        const fallbackValue = this.getCacheValue('range', undefined, asset.instance);
+        const fallbackValue = this.getCacheValue(
+          'range',
+          undefined,
+          asset.instance,
+        );
         if (O.isSome(fallbackValue)) {
           const mappedValue = mapper.mapAlexaCoLevelToHomeKitDetected(
             fallbackValue.value,
@@ -138,8 +142,15 @@ export default class CarbonMonoxideAccessory extends BaseAccessory {
       TE.match((e) => {
         this.recordError('CarbonMonoxideLevel');
 
-        const fallbackValue = this.getCacheValue('range', undefined, asset.instance);
-        if (O.isSome(fallbackValue) && typeof fallbackValue.value === 'number') {
+        const fallbackValue = this.getCacheValue(
+          'range',
+          undefined,
+          asset.instance,
+        );
+        if (
+          O.isSome(fallbackValue) &&
+          typeof fallbackValue.value === 'number'
+        ) {
           this.logWithContext(
             'warn',
             `Carbon monoxide level data unavailable for ${this.device.displayName}, using fallback cached value: ${fallbackValue.value}. Error: ${e.message}`,
@@ -155,7 +166,7 @@ export default class CarbonMonoxideAccessory extends BaseAccessory {
 
   private shouldSkipApiCall(rangeName: string): boolean {
     const lastError = this.lastErrorTime[rangeName];
-    return Boolean(lastError && (Date.now() - lastError) < this.ERROR_COOLDOWN);
+    return Boolean(lastError && Date.now() - lastError < this.ERROR_COOLDOWN);
   }
 
   private recordError(rangeName: string): void {
