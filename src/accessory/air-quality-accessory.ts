@@ -116,6 +116,20 @@ export default class AirQualityAccessory extends BaseAccessory {
   }
 
   async handlePM25DensityGet(asset: RangeFeature): Promise<number> {
+    const cachedValue = this.getCacheValue(
+      'range',
+      undefined,
+      asset.instance,
+    );
+
+    if (O.isSome(cachedValue) && typeof cachedValue.value === 'number') {
+      this.logWithContext(
+        'debug',
+        `Using cached PM2.5 density value: ${cachedValue.value}`,
+      );
+      return cachedValue.value;
+    }
+
     return pipe(
       this.getStateGraphQl(this.determineDensity(asset)),
       TE.match((e) => {
@@ -124,17 +138,17 @@ export default class AirQualityAccessory extends BaseAccessory {
           `PM2.5 density data unavailable for ${this.device.displayName}, using fallback value. Error: ${e.message}`,
         );
 
-        const cachedValue = this.getCacheValue(
+        const fallbackValue = this.getCacheValue(
           'range',
           undefined,
           asset.instance,
         );
-        if (O.isSome(cachedValue) && typeof cachedValue.value === 'number') {
+        if (O.isSome(fallbackValue) && typeof fallbackValue.value === 'number') {
           this.logWithContext(
             'debug',
-            `Using cached PM2.5 density value: ${cachedValue.value}`,
+            `Using fallback cached PM2.5 density value: ${fallbackValue.value}`,
           );
-          return cachedValue.value;
+          return fallbackValue.value;
         }
 
         this.logWithContext(
@@ -147,6 +161,20 @@ export default class AirQualityAccessory extends BaseAccessory {
   }
 
   async handleVocDensityGet(asset: RangeFeature): Promise<number> {
+    const cachedValue = this.getCacheValue(
+      'range',
+      undefined,
+      asset.instance,
+    );
+
+    if (O.isSome(cachedValue) && typeof cachedValue.value === 'number') {
+      this.logWithContext(
+        'debug',
+        `Using cached VOC density value: ${cachedValue.value}`,
+      );
+      return cachedValue.value;
+    }
+
     return pipe(
       this.getStateGraphQl(this.determineDensity(asset)),
       TE.match((e) => {
@@ -155,17 +183,17 @@ export default class AirQualityAccessory extends BaseAccessory {
           `VOC density data unavailable for ${this.device.displayName}, using fallback value. Error: ${e.message}`,
         );
 
-        const cachedValue = this.getCacheValue(
+        const fallbackValue = this.getCacheValue(
           'range',
           undefined,
           asset.instance,
         );
-        if (O.isSome(cachedValue) && typeof cachedValue.value === 'number') {
+        if (O.isSome(fallbackValue) && typeof fallbackValue.value === 'number') {
           this.logWithContext(
             'debug',
-            `Using cached VOC density value: ${cachedValue.value}`,
+            `Using fallback cached VOC density value: ${fallbackValue.value}`,
           );
-          return cachedValue.value;
+          return fallbackValue.value;
         }
 
         this.logWithContext(
